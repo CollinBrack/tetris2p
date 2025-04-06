@@ -1,0 +1,20 @@
+--- a/index.html
++++ b/index.html
+@@ -3,7 +3,7 @@
+ <html>
+ <head>
+   <meta charset="UTF-8"> <!-- Added charset for good practice -->
+-  <title>Tetris Blast Mashup</title>
++  <title>Team Tetris</title>
+   <style>
+     body {
+       font-family: sans-serif;
+@@ -19,7 +19,7 @@
+ 
+   <div class="container">
+     <!-- Game Title -->
+-    <h1>Tetris Blast</h1>
++    <h1>Team Tetris</h1>
+
+     <!-- Game Area holds both players and next piece -->
+     <div class="game-area">
