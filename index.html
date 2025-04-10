@@ -1,18 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Team Tetris</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Unified Tetris Blaster</title>
   <style>
+    :root {
+      --background-dark: #1a1d21;
+      --background-medium: #2c313a;
+      --background-light: #3e4451;
+      --text-light: #e6e6e6;
+      --text-medium: #b0b0b0;
+      --accent-blue: #4a90e2;
+      --accent-blue-hover: #3a7bc8;
+      --accent-green: #50e3c2;
+      --accent-green-hover: #38a890;
+      --accent-red: #e94e77;
+      --accent-red-hover: #c7385e;
+      --accent-yellow: #f8e71c;
+      --accent-purple: #9013fe;
+      --accent-orange: #f5a623;
+      --accent-cyan: #50e3c2; /* Using green as cyan for better visibility */
+      --accent-lime: #b8e986;
+      --border-color: #4a4a4a;
+      --shadow-light: rgba(255, 255, 255, 0.1);
+      --shadow-dark: rgba(0, 0, 0, 0.5);
+      --block-size: 24px; /* Define block size as CSS variable */
+    }
+
     body {
-      font-family: sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
-      flex-direction: column; /* Arrange title, game, controls vertically */
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background-color: #f0f0f0;
+      background-color: var(--background-dark);
+      color: var(--text-light);
       margin: 0;
-      padding: 20px; /* Add some padding */
+      padding: 20px;
       box-sizing: border-box;
     }
 
@@ -22,112 +48,141 @@
       flex-direction: column;
       align-items: center;
       width: 100%;
-      max-width: 850px; /* Max width to keep things contained */
+      max-width: 600px; /* Adjusted max-width for single board layout */
     }
 
-    .game-area {
+    h1 {
+      color: var(--accent-green);
+      margin-bottom: 25px;
+      text-shadow: 0 0 5px var(--accent-green);
+    }
+
+    .game-content {
       display: flex;
-      justify-content: center; /* Center items horizontally */
-      align-items: flex-start; /* Align items to the top */
-      gap: 30px; /* Adjust gap */
+      justify-content: center;
+      align-items: flex-start;
+      gap: 30px;
       margin-top: 20px;
-      width: 100%; /* Take full width of container */
+      width: 100%;
     }
 
-    #player1-area, #player2-area, #next-piece-area {
-      border: 1px solid #ccc;
-      padding: 15px; /* Adjust padding */
-      background-color: #fff;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+    #game-board-container {
+      position: relative; /* Crucial for positioning laser/marked dots */
+      width: calc(var(--block-size) * 10); /* COLS * BLOCK_SIZE */
+      height: calc(var(--block-size) * 20); /* ROWS * BLOCK_SIZE */
+      border: 2px solid var(--border-color);
+      box-shadow: 0 0 15px var(--shadow-dark);
+      background-color: var(--background-medium);
+      cursor: none; /* Hide default cursor */
+      overflow: hidden; /* Keep dots inside */
     }
 
-    #next-piece-area {
-      width: 140px; /* Width for next piece display */
-      min-height: 140px; /* Ensure some height */
-      justify-content: center; /* Center canvas vertically */
-      padding-top: 40px; /* Add padding above canvas for title */
-      position: relative; /* For positioning title */
-    }
-
-     #player1-area h2, #player2-area h2, #next-piece-area h2 {
-         margin-top: 0;
-         margin-bottom: 10px; /* Space below title */
-         font-size: 1.1em;
-     }
-
-     #next-piece-area h2 {
-         position: absolute; /* Position title within the area */
-         top: 15px;
-         left: 15px;
-         right: 15px; /* Center text */
-         margin: 0;
-     }
-
-    canvas {
-      border: 1px solid black;
+    #game-canvas {
       display: block;
-      margin: 5px auto;
-    }
-
-    #tetris-canvas, #blaster-canvas {
-        width: 240px;
-        height: 480px;
-        background-color: #e0e0e0;
-    }
-
-    #next-piece-canvas {
-        width: 96px; /* 4 * BLOCK_SIZE (24) */
-        height: 96px;
-        background-color: #e0e0e0;
-        border: 1px solid #aaa;
-    }
-
-    #blaster-canvas-container {
-        position: relative;
-        width: 240px;
-        height: 480px;
-        margin: 5px auto;
-        cursor: none;
-        background-color: #e0e0e0; /* Match canvas background */
-        overflow: hidden;
+      width: 100%;
+      height: 100%;
+      /* background-color: transparent; */ /* Canvas is drawn upon */
     }
 
     #laser-dot {
         position: absolute;
         width: 10px;
         height: 10px;
-        background-color: red;
+        background-color: var(--accent-red);
         border-radius: 50%;
         pointer-events: none;
         transform: translate(-50%, -50%);
         z-index: 10;
         display: none;
         border: 1px solid darkred;
-        box-shadow: 0 0 5px red;
+        box-shadow: 0 0 8px var(--accent-red);
     }
 
     .marked-dot {
         position: absolute;
         width: 8px;
         height: 8px;
-        background-color: rgba(0, 255, 0, 0.7);
+        background-color: rgba(80, 227, 194, 0.8); /* accent-green with alpha */
         border-radius: 50%;
         pointer-events: none;
         z-index: 15;
-        border: 1px solid darkgreen;
-        box-shadow: 0 0 3px green;
+        border: 1px solid #1f7a68; /* Darker green */
+        box-shadow: 0 0 5px var(--accent-green);
         transform: translate(-50%, -50%);
     }
 
-    #p1-score, #p2-score {
-        margin-top: 15px;
-        font-weight: bold;
-        height: 20px; /* Ensure consistent height */
-        font-size: 0.9em;
+    #side-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        width: 140px; /* Width for next piece + scores */
     }
+
+    #next-piece-area {
+      border: 1px solid var(--border-color);
+      padding: 15px;
+      background-color: var(--background-medium);
+      box-shadow: 0 2px 5px var(--shadow-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%; /* Take full width of side-panel */
+      min-height: 140px;
+      position: relative;
+      border-radius: 5px;
+    }
+
+     #next-piece-area h2 {
+         margin-top: 0;
+         margin-bottom: 10px;
+         font-size: 1.1em;
+         color: var(--text-light);
+         width: 100%;
+         text-align: center;
+         padding-bottom: 5px;
+         border-bottom: 1px solid var(--border-color);
+     }
+
+    #next-piece-canvas {
+        width: calc(var(--block-size) * 4); /* 4 * BLOCK_SIZE */
+        height: calc(var(--block-size) * 4);
+        background-color: var(--background-light);
+        border: 1px solid var(--border-color);
+        margin-top: 5px;
+    }
+
+    #score-area {
+        border: 1px solid var(--border-color);
+        padding: 15px;
+        background-color: var(--background-medium);
+        box-shadow: 0 2px 5px var(--shadow-dark);
+        border-radius: 5px;
+        text-align: left;
+    }
+
+    #score-area h2 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 1.1em;
+        color: var(--text-light);
+        text-align: center;
+        padding-bottom: 5px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    #p1-score, #p2-score {
+        margin-top: 8px;
+        font-weight: bold;
+        height: 20px;
+        font-size: 0.95em;
+        color: var(--text-medium);
+    }
+     #p1-score span, #p2-score span {
+         color: var(--text-light);
+         font-weight: normal;
+         float: right; /* Align numbers to the right */
+     }
+
 
     .hidden {
         display: none;
@@ -138,149 +193,233 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        background-color: rgba(0, 0, 0, 0.85);
-        color: white;
+        background-color: rgba(26, 29, 33, 0.95); /* background-dark with alpha */
+        color: var(--text-light);
         padding: 30px 40px;
         border-radius: 10px;
         text-align: center;
         z-index: 100;
-        border: 2px solid #eee;
+        border: 2px solid var(--accent-red);
+        box-shadow: 0 0 20px var(--shadow-dark);
     }
 
     #game-over h2 {
         margin-bottom: 15px;
         margin-top: 0;
+        color: var(--accent-red);
+        font-size: 1.8em;
     }
+     #game-over p {
+         font-size: 1.1em;
+         margin-bottom: 25px;
+     }
 
     #restart-button-gameover {
         padding: 12px 25px;
         font-size: 1.1em;
         cursor: pointer;
-        margin-top: 20px;
-        background-color: #4CAF50;
-        color: white;
+        background-color: var(--accent-green);
+        color: var(--background-dark);
         border: none;
         border-radius: 5px;
+        font-weight: bold;
+        transition: background-color 0.2s ease;
     }
      #restart-button-gameover:hover {
-         background-color: #3e8e41;
+         background-color: var(--accent-green-hover);
      }
 
-    .controls-overlay {
+    .controls-section {
         margin-top: 25px;
         display: flex;
+        flex-direction: column; /* Stack controls vertically */
+        align-items: center;
         gap: 15px;
-        align-items: center; /* Align items vertically */
+        width: 100%;
+        max-width: 400px; /* Limit width of controls */
     }
 
-    .controls-overlay button {
+    .main-controls {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .main-controls button {
         padding: 10px 20px;
         font-size: 1em;
         cursor: pointer;
-        background-color: #007bff;
-        color: white;
+        color: var(--background-dark);
         border: none;
         border-radius: 5px;
         min-width: 100px;
+        font-weight: bold;
+        transition: background-color 0.2s ease, box-shadow 0.2s ease;
     }
-
-    .controls-overlay button:hover {
-        background-color: #0056b3;
-    }
-     .controls-overlay button:disabled {
-         background-color: #cccccc;
+     .main-controls button:hover:not(:disabled) {
+         box-shadow: 0 0 8px var(--shadow-light);
+     }
+     .main-controls button:disabled {
+         background-color: var(--background-light);
+         color: var(--text-medium);
          cursor: not-allowed;
      }
 
+    button#start-pause-button { background-color: var(--accent-blue); }
+    button#start-pause-button:hover:not(:disabled) { background-color: var(--accent-blue-hover); }
 
-     .controls-overlay button#restart-button {
-         background-color: #dc3545;
-     }
-     .controls-overlay button#restart-button:hover {
-          background-color: #c82333;
-     }
+    button#restart-button { background-color: var(--accent-red); }
+    button#restart-button:hover:not(:disabled) { background-color: var(--accent-red-hover); }
+
 
      /* Speed Control Styles */
     #speed-control-area {
-        margin-top: 20px;
         display: flex;
         align-items: center;
         gap: 10px;
-        background-color: #eee;
+        background-color: var(--background-medium);
         padding: 10px 15px;
         border-radius: 5px;
-        border: 1px solid #ccc;
+        border: 1px solid var(--border-color);
+        width: 90%; /* Make it slightly narrower than max-width */
     }
     #speed-control-area label {
         font-weight: bold;
         font-size: 0.9em;
+        color: var(--text-medium);
     }
     #speed-slider {
-        width: 150px;
+        flex-grow: 1; /* Allow slider to take available space */
         cursor: pointer;
+        accent-color: var(--accent-blue); /* Style the slider track/thumb */
     }
     #speed-value {
         font-size: 0.9em;
-        min-width: 50px; /* Prevent layout shift */
+        min-width: 50px;
         text-align: right;
         font-family: monospace;
+        color: var(--text-light);
     }
+
+     /* Sound Control Styles */
+    #sound-control-area {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        background-color: var(--background-medium);
+        padding: 10px 15px;
+        border-radius: 5px;
+        border: 1px solid var(--border-color);
+        width: 90%; /* Match speed control width */
+    }
+     #sound-control-area label {
+         font-weight: bold;
+         font-size: 0.9em;
+         color: var(--text-medium);
+     }
+     #volume-slider {
+         flex-grow: 1;
+         cursor: pointer;
+         accent-color: var(--accent-green);
+     }
+     #mute-button {
+         padding: 5px 10px;
+         font-size: 0.9em;
+         cursor: pointer;
+         background-color: var(--accent-yellow);
+         color: var(--background-dark);
+         border: none;
+         border-radius: 3px;
+         font-weight: bold;
+         min-width: 60px;
+         text-align: center;
+         transition: background-color 0.2s ease;
+     }
+      #mute-button:hover {
+          background-color: #d4c61a; /* Darker yellow */
+      }
+      #mute-button.muted {
+          background-color: var(--accent-red);
+      }
+       #mute-button.muted:hover {
+           background-color: var(--accent-red-hover);
+       }
 
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Team Tetris</h1>
-    <div class="game-area">
-      <div id="player1-area">
-        <h2>Player 1 (Tetris)</h2>
-        <canvas id="tetris-canvas"></canvas> <!-- Dimensions set by CSS/JS -->
-        <div id="p1-score">Score: 0</div>
+    <h1>Unified Tetris Blaster</h1>
+
+    <div class="game-content">
+      <!-- Unified Game Board -->
+      <div id="game-board-container">
+         <canvas id="game-canvas"></canvas>
+         <div id="laser-dot"></div>
+         <!-- Marked dots will be added here by JS -->
       </div>
-      <div id="player2-area">
-        <h2>Player 2 (Blaster)</h2>
-        <div id="blaster-canvas-container">
-           <canvas id="blaster-canvas"></canvas>
-           <div id="laser-dot"></div>
-           <!-- Marked dots added here -->
-        </div>
-         <div id="p2-score">Score: 0 Shots: 0</div>
-      </div>
-      <!-- Next Piece Display Area -->
-      <div id="next-piece-area">
-        <h2>Next Piece</h2>
-        <canvas id="next-piece-canvas"></canvas>
+
+      <!-- Side Panel for Next Piece and Scores -->
+      <div id="side-panel">
+          <!-- Next Piece Display Area -->
+          <div id="next-piece-area">
+            <h2>Next</h2>
+            <canvas id="next-piece-canvas"></canvas>
+          </div>
+          <!-- Score Display Area -->
+          <div id="score-area">
+              <h2>Score</h2>
+              <div id="p1-score">Tetris: <span>0</span></div>
+              <div id="p2-score">Blaster: <span>0</span> | Shots: <span>0</span></div>
+          </div>
       </div>
     </div>
+
+     <!-- Game Over Screen -->
      <div id="game-over" class="hidden">
         <h2>Game Over!</h2>
         <p id="winner-message"></p>
         <button id="restart-button-gameover">Restart Game</button>
     </div>
-    <!-- Control Buttons Overlay -->
-    <div class="controls-overlay">
-        <button id="start-pause-button">Start</button>
-        <button id="restart-button">Restart</button>
+
+    <!-- Controls Section -->
+    <div class="controls-section">
+        <!-- Main Start/Pause/Restart Buttons -->
+        <div class="main-controls">
+            <button id="start-pause-button">Start</button>
+            <button id="restart-button">Restart</button>
+        </div>
+
+        <!-- Speed Control Area -->
+        <div id="speed-control-area">
+            <label for="speed-slider">Speed:</label>
+            <input type="range" id="speed-slider" min="100" max="1000" step="50" value="1000">
+            <span id="speed-value">1000ms</span>
+        </div>
+
+        <!-- Sound Control Area -->
+        <div id="sound-control-area">
+            <label for="volume-slider">Volume:</label>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.05" value="0.5">
+            <button id="mute-button">Mute</button>
+        </div>
     </div>
-     <!-- Speed Control Area -->
-     <div id="speed-control-area">
-         <label for="speed-slider">Speed (ms/drop):</label>
-         <input type="range" id="speed-slider" min="100" max="1000" step="50" value="1000">
-         <span id="speed-value">1000ms</span>
-     </div>
+
   </div>
+
+  <!-- Background Music Element -->
+  <!-- IMPORTANT: Replace the src path with your actual music file -->
+  <audio id="bg-music" src="./path/to/your/background-music.mp3" loop></audio>
 
   <script type="module">
     // --- Get DOM Elements ---
-    const tetrisCanvas = document.getElementById('tetris-canvas');
-    const tetrisCtx = tetrisCanvas.getContext('2d');
-    const blasterCanvas = document.getElementById('blaster-canvas');
-    const blasterCtx = blasterCanvas.getContext('2d');
+    const gameCanvas = document.getElementById('game-canvas');
+    const gameCtx = gameCanvas.getContext('2d');
     const nextPieceCanvas = document.getElementById('next-piece-canvas');
     const nextPieceCtx = nextPieceCanvas.getContext('2d');
-    const p1ScoreEl = document.getElementById('p1-score');
-    const p2ScoreEl = document.getElementById('p2-score');
-    const blasterContainer = document.getElementById('blaster-canvas-container');
+    const p1ScoreEl = document.getElementById('p1-score').querySelector('span'); // Target the span for the value
+    const p2ScoreEl = document.getElementById('p2-score').querySelector('span'); // Target the span for the value
+    const gameBoardContainer = document.getElementById('game-board-container'); // New container
     const laserDot = document.getElementById('laser-dot');
     const gameOverScreen = document.getElementById('game-over');
     const winnerMessage = document.getElementById('winner-message');
@@ -289,26 +428,25 @@
     const restartButton = document.getElementById('restart-button');
     const speedSlider = document.getElementById('speed-slider');
     const speedValueDisplay = document.getElementById('speed-value');
+    // Sound Elements
+    const bgMusic = document.getElementById('bg-music');
+    const volumeSlider = document.getElementById('volume-slider');
+    const muteButton = document.getElementById('mute-button');
 
 
     // --- Game Constants ---
     const COLS = 10;
     const ROWS = 20;
-    const BLOCK_SIZE = 24; // Fixed block size
+    const BLOCK_SIZE = 24; // Use the value from CSS variable if needed dynamically, otherwise keep fixed
     const POINTS_PER_LINE = 100;
     const POINTS_PER_BLAST = 25;
     const SHOTS_PER_LINE_CLEAR = 5;
     const INITIAL_SHOTS = 10;
     const BASE_DROP_INTERVAL = 1000; // Default starting speed
-    // const MIN_DROP_INTERVAL = 100; // Slider min sets this now
-    // const SPEED_INCREASE_FACTOR = 0.88; // Removed auto-speed increase
-    // const LINES_PER_LEVEL = 10; // Removed auto-speed increase
 
     // Set canvas dimensions based on constants
-    tetrisCanvas.width = COLS * BLOCK_SIZE;
-    tetrisCanvas.height = ROWS * BLOCK_SIZE;
-    blasterCanvas.width = COLS * BLOCK_SIZE;
-    blasterCanvas.height = ROWS * BLOCK_SIZE;
+    gameCanvas.width = COLS * BLOCK_SIZE;
+    gameCanvas.height = ROWS * BLOCK_SIZE;
     nextPieceCanvas.width = 4 * BLOCK_SIZE; // Accommodate 4x4 grid
     nextPieceCanvas.height = 4 * BLOCK_SIZE;
 
@@ -323,33 +461,45 @@
         [[0, 1, 1], [1, 1, 0]], // S
         [[1, 1, 0], [0, 1, 1]]  // Z
     ];
+    // Using CSS variables for colors might be complex for canvas, stick to JS constants
     const COLORS = [
-        null, 'cyan', 'yellow', 'purple', 'orange', 'blue', 'lime', 'red'
+        null, // 0: Empty
+        '#50e3c2', // 1: Cyan (I) - Using accent green
+        '#f8e71c', // 2: Yellow (O)
+        '#9013fe', // 3: Purple (T)
+        '#f5a623', // 4: Orange (L)
+        '#4a90e2', // 5: Blue (J)
+        '#b8e986', // 6: Lime (S) - Using accent lime
+        '#e94e77'  // 7: Red (Z) - Using accent red
     ];
 
     // --- Game State Variables ---
-    let p1Board;
-    let p2BoardRepresentation;
+    let board; // Single unified board
     let currentPiece;
     let nextPiece;
-    let p1Score;
-    let p2Score;
+    let p1Score; // Tetris score
+    let p2Score; // Blaster score
     let availableShots;
-    let totalLinesCleared; // Still useful for score or other mechanics
+    let totalLinesCleared;
     let dropCounter;
-    let dropInterval; // Now controlled by slider
+    let dropInterval; // Controlled by slider
     let gameOver;
     let gamePaused;
+    let gameStarted = false; // To track if the game has started at least once
     let animationFrameId;
     let lastTime = 0;
 
     // --- Blaster State Variables ---
     let mouseX = 0;
     let mouseY = 0;
-    let markedDots = [];
+    let markedDots = []; // Stores {row, col, element}
     let isMarking = false;
 
-    // --- Player 1: Tetris Logic ---
+    // --- Sound State ---
+    let isMuted = false;
+    let lastVolume = 0.5; // Default volume
+
+    // --- Unified Game Logic ---
 
     function createEmptyBoard() {
         return Array.from({ length: ROWS }, () => Array(COLS).fill(0));
@@ -360,23 +510,24 @@
         const shape = SHAPES[typeId - 1];
         return {
             x: Math.floor(COLS / 2) - Math.floor(shape[0].length / 2),
-            y: 0,
+            y: 0, // Start at the very top
             shape: shape,
             colorIndex: typeId
         };
     }
 
-    function isValidMove(piece, board) {
+    function isValidMove(piece, currentBoard) {
         for (let y = 0; y < piece.shape.length; y++) {
             for (let x = 0; x < piece.shape[y].length; x++) {
                 if (piece.shape[y][x]) {
                     const boardX = piece.x + x;
                     const boardY = piece.y + y;
-                    if (
-                        boardX < 0 || boardX >= COLS ||
-                        boardY >= ROWS ||
-                        (boardY >= 0 && board[boardY]?.[boardX] > 0)
-                    ) {
+                    // Check boundaries
+                    if (boardX < 0 || boardX >= COLS || boardY >= ROWS) {
+                        return false;
+                    }
+                    // Check collision with existing blocks (only if within board vertically)
+                    if (boardY >= 0 && currentBoard[boardY]?.[boardX] > 0) {
                         return false;
                     }
                 }
@@ -385,7 +536,9 @@
         return true;
     }
 
+
     function rotatePiece(piece) {
+        // Simple rotation logic (can be improved with wall kicks)
         const rows = piece.shape.length;
         const cols = piece.shape[0].length;
         const newShape = Array.from({ length: cols }, () => Array(rows).fill(0));
@@ -397,228 +550,420 @@
         return newShape;
     }
 
-    function handlePlayer1Input(event) {
+     function handleInput(event) {
         if (gameOver || gamePaused || !currentPiece) return;
 
         const key = event.key.toUpperCase();
         let moved = false;
+        // Create a deep copy for testing moves
         let testPiece = JSON.parse(JSON.stringify(currentPiece));
 
         switch (key) {
-            case 'ARROWLEFT': case 'L':
+            case 'ARROWLEFT':
+            case 'A': // Add WASD option
                 testPiece.x--;
-                if (isValidMove(testPiece, p1Board)) { currentPiece.x--; moved = true; }
+                if (isValidMove(testPiece, board)) { currentPiece.x--; moved = true; }
                 break;
-            case 'ARROWRIGHT': case 'R':
+            case 'ARROWRIGHT':
+            case 'D': // Add WASD option
                 testPiece.x++;
-                if (isValidMove(testPiece, p1Board)) { currentPiece.x++; moved = true; }
+                if (isValidMove(testPiece, board)) { currentPiece.x++; moved = true; }
                 break;
-            case 'ARROWDOWN': case 'D':
+            case 'ARROWDOWN':
+            case 'S': // Add WASD option
                 testPiece.y++;
-                if (isValidMove(testPiece, p1Board)) { currentPiece.y++; dropCounter = 0; moved = true; }
-                else { lockPiece(); moved = false; }
+                if (isValidMove(testPiece, board)) {
+                    currentPiece.y++;
+                    dropCounter = 0; // Reset drop timer for manual drop
+                    moved = true;
+                } else {
+                    // If move down is invalid, lock the piece immediately
+                    lockPiece();
+                    moved = false; // Don't redraw if locked, lockPiece handles it
+                }
                 break;
-            case 'ARROWUP': case 'U':
+            case 'ARROWUP':
+            case 'W': // Add WASD option for rotation
                 testPiece.shape = rotatePiece(currentPiece);
+                // Basic wall kick logic (try moving left/right if rotation fails)
                 let kickX = 0;
-                 if (!isValidMove(testPiece, p1Board)) {
-                    testPiece.x--; if (isValidMove(testPiece, p1Board)) kickX = -1;
-                    else { testPiece.x += 2; if (isValidMove(testPiece, p1Board)) kickX = 1; else testPiece.x--; }
+                 if (!isValidMove(testPiece, board)) {
+                    testPiece.x--; // Try kick left
+                    if (isValidMove(testPiece, board)) {
+                        kickX = -1;
+                    } else {
+                        testPiece.x += 2; // Try kick right
+                        if (isValidMove(testPiece, board)) {
+                            kickX = 1;
+                        } else {
+                            testPiece.x--; // Reset x if kicks fail
+                        }
+                    }
                  }
-                 if (!isValidMove(testPiece, p1Board)) { testPiece.shape = currentPiece.shape; }
-                 else { currentPiece.shape = testPiece.shape; currentPiece.x += kickX; moved = true; }
+                 // If still invalid after kicks, revert shape
+                 if (!isValidMove(testPiece, board)) {
+                     testPiece.shape = currentPiece.shape; // Revert shape
+                 } else {
+                     // Apply rotation and kick
+                     currentPiece.shape = testPiece.shape;
+                     currentPiece.x += kickX;
+                     moved = true;
+                 }
                 break;
+             case ' ': // Space for hard drop (optional)
+                 while (isValidMove({ ...currentPiece, y: currentPiece.y + 1 }, board)) {
+                     currentPiece.y++;
+                 }
+                 lockPiece();
+                 moved = false; // lockPiece handles drawing
+                 break;
         }
 
-        if (moved) { drawTetris(); drawBlasterView(); }
+        if (moved) {
+            drawGame(); // Redraw the unified game board
+        }
     }
+
 
     function lockPiece() {
         if (!currentPiece) return;
+
         let toppedOut = false;
         currentPiece.shape.forEach((row, y) => {
             row.forEach((value, x) => {
                 if (value) {
-                     const boardY = currentPiece.y + y; const boardX = currentPiece.x + x;
-                     if (boardY < 0) toppedOut = true;
-                     else if (boardY < ROWS && boardX >= 0 && boardX < COLS) {
-                        p1Board[boardY][boardX] = currentPiece.colorIndex;
-                        if (p2BoardRepresentation[boardY]) p2BoardRepresentation[boardY][boardX] = currentPiece.colorIndex;
+                     const boardY = currentPiece.y + y;
+                     const boardX = currentPiece.x + x;
+                     // Check if any part of the locked piece is above the visible board
+                     if (boardY < 0) {
+                         toppedOut = true;
+                     } else if (boardY < ROWS && boardX >= 0 && boardX < COLS) {
+                        // Lock the piece onto the main board
+                        board[boardY][boardX] = currentPiece.colorIndex;
                      }
                 }
             });
         });
+
+        // Piece is now locked, clear the current piece reference
         currentPiece = null;
-        if (toppedOut) { endGame("Player 2"); drawTetris(); drawBlasterView(); return; }
-        const linesWereCleared = checkLineClears();
+
+        // Check for game over *after* locking
+        if (toppedOut) {
+            endGame("Blaster"); // If topped out, Blaster wins
+            drawGame(); // Draw the final board state
+            return; // Stop further processing
+        }
+
+        // Check for line clears only if the game is not over
+        const linesWereCleared = checkLineClears(); // This also redraws if lines are cleared
+
+        // Spawn next piece if the game continues
         if (!gameOver) {
-             spawnNewPiece();
-             if(!linesWereCleared) { drawTetris(); drawBlasterView(); }
+             spawnNewPiece(); // This checks for game over on spawn failure
+             // If lines were *not* cleared, we need to redraw to show the newly spawned piece
+             if (!linesWereCleared && !gameOver) {
+                 drawGame();
+             }
         }
     }
 
     function spawnNewPiece() {
          if (gameOver) return;
-         currentPiece = nextPiece || getRandomPiece();
-         nextPiece = getRandomPiece();
-         if (!isValidMove(currentPiece, p1Board)) {
-             currentPiece = null; endGame("Player 2"); drawTetris(); drawBlasterView(); return;
+
+         currentPiece = nextPiece || getRandomPiece(); // Use pending next piece or get a new one
+         nextPiece = getRandomPiece(); // Generate the *next* next piece
+
+         // Check if the new piece spawns in a valid position
+         if (!isValidMove(currentPiece, board)) {
+             // If the new piece immediately collides, game over for Tetris player
+             currentPiece = null; // Ensure no ghost piece is drawn
+             endGame("Blaster"); // Blaster wins
+             drawGame(); // Show final state
+             return; // Stop
          }
-         drawNextPiece(); // Update the preview
+
+         // Update the "Next Piece" display
+         drawNextPiece();
     }
 
     function checkLineClears() {
         if (gameOver) return false;
+
         let linesClearedThisCheck = 0;
+        let rowsToClear = [];
+
+        // Find completed rows from bottom up
         for (let y = ROWS - 1; y >= 0; y--) {
-            if (p1Board[y] && p1Board[y].every(cell => cell > 0)) {
+            if (board[y] && board[y].every(cell => cell > 0)) {
                 linesClearedThisCheck++;
-                p1Board.splice(y, 1); p2BoardRepresentation.splice(y, 1);
-                p1Board.unshift(Array(COLS).fill(0)); p2BoardRepresentation.unshift(Array(COLS).fill(0));
-                y++;
+                rowsToClear.push(y);
             }
         }
+
         if (linesClearedThisCheck > 0) {
-            p1Score += linesClearedThisCheck * POINTS_PER_LINE * Math.pow(linesClearedThisCheck, 2);
+            // Remove cleared rows
+            rowsToClear.sort((a, b) => a - b); // Sort ascending to splice correctly
+            for (let i = rowsToClear.length - 1; i >= 0; i--) {
+                board.splice(rowsToClear[i], 1);
+            }
+            // Add new empty rows at the top
+            for (let i = 0; i < linesClearedThisCheck; i++) {
+                board.unshift(Array(COLS).fill(0));
+            }
+
+            // Update score and shots
+            // Award bonus points for clearing multiple lines at once
+            p1Score += linesClearedThisCheck * POINTS_PER_LINE * linesClearedThisCheck; // Bonus for multi-lines
             availableShots += linesClearedThisCheck * SHOTS_PER_LINE_CLEAR;
             totalLinesCleared += linesClearedThisCheck;
-            // Speed handled manually now
-            updateScores(); drawTetris(); drawBlasterView();
-            return true;
+
+            updateScores();
+            drawGame(); // Redraw the board after clearing lines
+            return true; // Indicate lines were cleared
         }
-        return false;
+
+        return false; // No lines cleared
     }
 
-    function player1Drop() {
+
+    function pieceDrop() {
         if (gameOver || gamePaused || !currentPiece) return;
+
+        // Create a temporary piece to test the move down
         let testPiece = { ...currentPiece, y: currentPiece.y + 1 };
-        if (isValidMove(testPiece, p1Board)) {
-            currentPiece.y++; dropCounter = 0; drawTetris(); drawBlasterView();
-        } else { lockPiece(); }
+
+        if (isValidMove(testPiece, board)) {
+            // If the move is valid, update the current piece's position
+            currentPiece.y++;
+            dropCounter = 0; // Reset drop timer as the piece moved
+            drawGame(); // Redraw the game with the piece in the new position
+        } else {
+            // If the move is invalid, lock the piece in its current position
+            lockPiece(); // lockPiece handles spawning next and drawing
+        }
     }
 
-    // --- Player 2: Blaster Logic ---
+
+    // --- Blaster Logic (Operating on the unified board) ---
 
     function handleBlasterMouseMove(event) {
         if (gameOver || gamePaused) return;
-        const rect = blasterContainer.getBoundingClientRect();
-        mouseX = event.clientX - rect.left; mouseY = event.clientY - rect.top;
-        mouseX = Math.max(0, Math.min(blasterCanvas.width -1, mouseX));
-        mouseY = Math.max(0, Math.min(blasterCanvas.height -1, mouseY));
-        laserDot.style.left = `${mouseX}px`; laserDot.style.top = `${mouseY}px`;
-        laserDot.style.display = 'block';
-        if (isMarking) tryMarkBlock(mouseX, mouseY);
+        const rect = gameBoardContainer.getBoundingClientRect();
+        mouseX = event.clientX - rect.left;
+        mouseY = event.clientY - rect.top;
+
+        // Clamp coordinates to be within the canvas bounds
+        mouseX = Math.max(0, Math.min(gameCanvas.width - 1, mouseX));
+        mouseY = Math.max(0, Math.min(gameCanvas.height - 1, mouseY));
+
+        // Update laser dot position
+        laserDot.style.left = `${mouseX}px`;
+        laserDot.style.top = `${mouseY}px`;
+        laserDot.style.display = 'block'; // Show the dot
+
+        // If left mouse button is held down, try marking
+        if (isMarking) {
+            tryMarkBlock(mouseX, mouseY);
+        }
     }
 
-    function handleMouseLeaveBlaster() { if (!isMarking) laserDot.style.display = 'none'; }
+    function handleMouseLeaveBlaster() {
+        // Hide the laser dot only if not currently marking (dragging outside)
+        if (!isMarking) {
+            laserDot.style.display = 'none';
+        }
+    }
 
     function handleBlasterMouseDown(event) {
-        if (gameOver || gamePaused || event.button !== 0) return;
+        if (gameOver || gamePaused || event.button !== 0) return; // Only react to left click
         isMarking = true;
-        tryMarkBlock(mouseX, mouseY);
-        event.preventDefault();
+        tryMarkBlock(mouseX, mouseY); // Try marking at the current mouse position
+        event.preventDefault(); // Prevent text selection or other default actions
     }
 
-    function handleWindowMouseUp(event) { if (event.button === 0) isMarking = false; }
+    function handleWindowMouseUp(event) {
+        // Release marking state on left mouse button up, regardless of where it happens
+        if (event.button === 0) {
+            isMarking = false;
+            // Optional: Hide laser dot immediately on mouse up if desired
+            // const rect = gameBoardContainer.getBoundingClientRect();
+            // if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) {
+            //    laserDot.style.display = 'none';
+            // }
+        }
+    }
 
     function tryMarkBlock(canvasX, canvasY) {
-         if (availableShots <= 0) return; // Strict check
-        const targetCol = Math.floor(canvasX / BLOCK_SIZE); const targetRow = Math.floor(canvasY / BLOCK_SIZE);
-        if (targetRow >= 0 && targetRow < ROWS && targetCol >= 0 && targetCol < COLS && p1Board[targetRow]?.[targetCol] > 0) {
+         if (availableShots <= 0) return; // Can't mark if no shots left
+
+        const targetCol = Math.floor(canvasX / BLOCK_SIZE);
+        const targetRow = Math.floor(canvasY / BLOCK_SIZE);
+
+        // Check if the target coordinates are valid and if there's a block there
+        if (targetRow >= 0 && targetRow < ROWS && targetCol >= 0 && targetCol < COLS && board[targetRow]?.[targetCol] > 0) {
+            // Check if this specific block is already marked
             const isAlreadyMarked = markedDots.some(dot => dot.row === targetRow && dot.col === targetCol);
+
             if (!isAlreadyMarked) {
-                // Only add mark and decrement shots if not already marked AND shots > 0
+                // Only add mark and decrement shots if it's a valid, unmarked block and shots > 0
                  addMarkedDotVisual(targetRow, targetCol);
-                 availableShots--; // Decrement only when adding a new mark
-                 updateScores();
+                 availableShots--; // Decrement shots *only* when a new mark is successfully placed
+                 updateScores(); // Update the displayed shot count
             }
         }
     }
 
+
     function handleBlasterRightClick(event) {
-        if (gameOver || gamePaused) return; event.preventDefault();
-        fireBlasts(); clearMarkedDotVisuals();
+        if (gameOver || gamePaused) return;
+        event.preventDefault(); // Prevent browser context menu
+        fireBlasts(); // Execute the firing sequence
+        clearMarkedDotVisuals(); // Clear visual markers after firing attempt
     }
 
     function addMarkedDotVisual(row, col) {
-        const dot = document.createElement('div'); dot.classList.add('marked-dot');
-        dot.style.left = `${col * BLOCK_SIZE + BLOCK_SIZE / 2}px`; dot.style.top = `${row * BLOCK_SIZE + BLOCK_SIZE / 2}px`;
-        dot.dataset.row = row; dot.dataset.col = col;
-        blasterContainer.appendChild(dot);
-        markedDots.push({ row: row, col: col, element: dot });
+        const dot = document.createElement('div');
+        dot.classList.add('marked-dot');
+        // Position the dot in the center of the target block
+        dot.style.left = `${col * BLOCK_SIZE + BLOCK_SIZE / 2}px`;
+        dot.style.top = `${row * BLOCK_SIZE + BLOCK_SIZE / 2}px`;
+        dot.dataset.row = row; // Store row/col for reference if needed
+        dot.dataset.col = col;
+        gameBoardContainer.appendChild(dot); // Append to the main game container
+        markedDots.push({ row: row, col: col, element: dot }); // Keep track of the dot
     }
 
     function clearMarkedDotVisuals() {
-        markedDots.forEach(dot => dot.element?.remove()); markedDots = [];
+        markedDots.forEach(dot => dot.element?.remove()); // Remove elements from DOM
+        markedDots = []; // Clear the tracking array
     }
 
     function applyGravity(col, startRow) {
+        // Start from the cleared row and move upwards
         for (let r = startRow; r >= 0; r--) {
-             if (p1Board[r]?.[col] > 0) {
+             // If there's a block at (r, col)
+             if (board[r]?.[col] > 0) {
                 let fallToRow = r;
-                while (fallToRow + 1 < ROWS && p1Board[fallToRow + 1]?.[col] === 0) fallToRow++;
+                // Find the lowest empty spot below it in the same column
+                while (fallToRow + 1 < ROWS && board[fallToRow + 1]?.[col] === 0) {
+                    fallToRow++;
+                }
+                // If it can fall (fallToRow is lower than r)
                 if (fallToRow > r) {
-                    p1Board[fallToRow][col] = p1Board[r][col]; p1Board[r][col] = 0;
-                    if (p2BoardRepresentation[fallToRow] && p2BoardRepresentation[r]) {
-                         p2BoardRepresentation[fallToRow][col] = p2BoardRepresentation[r][col];
-                         p2BoardRepresentation[r][col] = 0;
-                    }
+                    // Move the block down
+                    board[fallToRow][col] = board[r][col];
+                    // Clear the original position
+                    board[r][col] = 0;
                 }
             }
         }
     }
 
+
     function fireBlasts() {
-        if (markedDots.length === 0) return;
+        if (markedDots.length === 0) return; // Nothing to fire at
+
         let blastHit = false;
+        let columnsAffected = new Set(); // Track columns to apply gravity later
+
         markedDots.forEach(dot => {
-            const targetRow = dot.row; const targetCol = dot.col;
-            if (targetRow >= 0 && targetRow < ROWS && targetCol >= 0 && targetCol < COLS && p1Board[targetRow]?.[targetCol] > 0) {
-                p1Board[targetRow][targetCol] = 0;
-                if (p2BoardRepresentation[targetRow]) p2BoardRepresentation[targetRow][targetCol] = 0;
-                p2Score += POINTS_PER_BLAST; blastHit = true;
-                applyGravity(targetCol, targetRow);
+            const targetRow = dot.row;
+            const targetCol = dot.col;
+
+            // Double-check if the block still exists at the marked location
+            if (targetRow >= 0 && targetRow < ROWS && targetCol >= 0 && targetCol < COLS && board[targetRow]?.[targetCol] > 0) {
+                board[targetRow][targetCol] = 0; // Clear the block on the main board
+                p2Score += POINTS_PER_BLAST; // Award points for successful blast
+                blastHit = true;
+                columnsAffected.add(targetCol); // Record the column for gravity check
             }
         });
-        if (blastHit) { updateScores(); drawTetris(); drawBlasterView(); }
+
+        // Apply gravity only to affected columns after all blasts are processed
+        columnsAffected.forEach(col => {
+            // Start gravity check from the bottom-most possibly affected row upwards
+            applyGravity(col, ROWS - 1);
+        });
+
+        // Update scores and redraw if any block was actually hit
+        if (blastHit) {
+            updateScores();
+            // Check for line clears *caused* by blocks falling after blasting
+            const linesClearedAfterBlast = checkLineClears();
+            // If lines were cleared by the blast/gravity, checkLineClears already redrew.
+            // Otherwise, redraw manually.
+            if (!linesClearedAfterBlast) {
+                drawGame();
+            }
+        }
+        // Note: Marked dot visuals are cleared by the caller (handleBlasterRightClick)
     }
 
 
-    // --- Drawing Functions ---
 
-    // drawBlock adjusted slightly for potentially different contexts
-    function drawBlockOnCanvas(ctx, x, y, colorIndex, blockSize) {
-         if (colorIndex > 0) {
+    // --- Drawing Functions (Unified) ---
+
+    function drawBlock(ctx, x, y, colorIndex, currentBlockSize) {
+         if (colorIndex > 0 && y >= 0) { // Only draw blocks within the board area (y>=0)
             ctx.fillStyle = COLORS[colorIndex];
-            ctx.fillRect(x * blockSize, y * blockSize, blockSize, blockSize);
-            ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+            ctx.fillRect(x * currentBlockSize, y * currentBlockSize, currentBlockSize, currentBlockSize);
+
+            // Add a subtle border for definition
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)'; // Darker border
             ctx.lineWidth = 1;
-            ctx.strokeRect(x * blockSize + 0.5, y * blockSize + 0.5, blockSize -1, blockSize -1);
+            ctx.strokeRect(x * currentBlockSize + 0.5, y * currentBlockSize + 0.5, currentBlockSize - 1, currentBlockSize - 1);
          }
     }
 
-    function drawBoard(ctx, board) {
+    function drawBoard(ctx, currentBoard) {
+        // Clear the entire canvas
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-        board.forEach((row, y) => {
+
+        // Optional: Draw a background grid (subtle)
+        // ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)'; // Very faint grid lines
+        // ctx.lineWidth = 0.5;
+        // for (let x = 0; x < COLS; x++) {
+        //     ctx.beginPath();
+        //     ctx.moveTo(x * BLOCK_SIZE, 0);
+        //     ctx.lineTo(x * BLOCK_SIZE, ctx.canvas.height);
+        //     ctx.stroke();
+        // }
+        // for (let y = 0; y < ROWS; y++) {
+        //     ctx.beginPath();
+        //     ctx.moveTo(0, y * BLOCK_SIZE);
+        //     ctx.lineTo(ctx.canvas.width, y * BLOCK_SIZE);
+        //     ctx.stroke();
+        // }
+
+
+        // Draw the locked blocks on the board
+        currentBoard.forEach((row, y) => {
             row.forEach((value, x) => {
-                if (y >= 0) drawBlockOnCanvas(ctx, x, y, value, BLOCK_SIZE);
+                drawBlock(ctx, x, y, value, BLOCK_SIZE);
             });
         });
     }
 
     function drawPiece(ctx, piece) {
-        if (!piece) return;
+        if (!piece) return; // Do nothing if there's no current piece
+
         piece.shape.forEach((row, y) => {
             row.forEach((value, x) => {
-                if (value && piece.y + y >= 0) {
-                    drawBlockOnCanvas(ctx, piece.x + x, piece.y + y, piece.colorIndex, BLOCK_SIZE);
+                // Only draw the part of the piece that is within the board's visible area
+                if (value && (piece.y + y >= 0)) {
+                    drawBlock(ctx, piece.x + x, piece.y + y, piece.colorIndex, BLOCK_SIZE);
                 }
             });
         });
     }
 
-    function drawTetris() { if (!tetrisCtx) return; drawBoard(tetrisCtx, p1Board); drawPiece(tetrisCtx, currentPiece); }
-    function drawBlasterView() { if (!blasterCtx) return; drawBoard(blasterCtx, p2BoardRepresentation); }
+    // Single drawing function for the main game area
+    function drawGame() {
+        if (!gameCtx) return;
+        drawBoard(gameCtx, board); // Draw the current state of the board
+        drawPiece(gameCtx, currentPiece); // Draw the falling piece on top
+    }
 
     // --- Draw Next Piece ---
     function drawNextPiece() {
@@ -626,130 +971,315 @@
 
         // Clear the small canvas
         nextPieceCtx.clearRect(0, 0, nextPieceCanvas.width, nextPieceCanvas.height);
-        // Optional: Fill background if needed
-        // nextPieceCtx.fillStyle = '#e0e0e0';
-        // nextPieceCtx.fillRect(0, 0, nextPieceCanvas.width, nextPieceCanvas.height);
-
 
         const shape = nextPiece.shape;
         const colorIndex = nextPiece.colorIndex;
         const shapeWidth = shape[0].length;
         const shapeHeight = shape.length;
+        const nextPieceBlockSize = BLOCK_SIZE; // Use the same block size
 
-        // Calculate offsets to center the piece in the 4x4 grid area
+        // Calculate offsets to center the piece in the 4x4 grid area (in blocks)
         const offsetX = Math.floor((4 - shapeWidth) / 2);
         const offsetY = Math.floor((4 - shapeHeight) / 2);
 
-        // Draw the piece centered
+        // Draw the piece centered using the block drawing function
         shape.forEach((row, y) => {
             row.forEach((value, x) => {
                 if (value) {
-                    drawBlockOnCanvas(nextPieceCtx, offsetX + x, offsetY + y, colorIndex, BLOCK_SIZE);
+                    // Use the main drawBlock function, passing the nextPieceCtx
+                    drawBlock(nextPieceCtx, offsetX + x, offsetY + y, colorIndex, nextPieceBlockSize);
                 }
             });
         });
     }
 
+
     // --- Game Loop ---
 
     function gameLoop(timestamp) {
-        if (gameOver || gamePaused) { animationFrameId = null; return; }
-        const deltaTime = timestamp - lastTime; lastTime = timestamp;
+        if (gameOver || gamePaused) {
+            animationFrameId = null; // Ensure loop stops tracking
+            return;
+        }
+
+        // Calculate time elapsed since the last frame
+        const deltaTime = timestamp - lastTime;
+        lastTime = timestamp; // Update lastTime for the next frame
+
+        // Accumulate time towards the next piece drop
         dropCounter += deltaTime;
-        if (dropCounter > dropInterval) player1Drop();
+
+        // Check if enough time has passed for the piece to drop
+        if (dropCounter > dropInterval) {
+            pieceDrop(); // Attempt to drop the piece
+            // dropCounter is reset within pieceDrop if it moves, or implicitly handled by lockPiece if it locks
+        }
+
+        // Request the next frame
         animationFrameId = requestAnimationFrame(gameLoop);
     }
+
 
     // --- Score and Game State Updates ---
 
     function updateScores() {
-        p1ScoreEl.textContent = `Score: ${p1Score}`;
-        p2ScoreEl.textContent = `Score: ${p2Score} Shots: ${availableShots}`;
+        p1ScoreEl.textContent = `${p1Score}`;
+        p2ScoreEl.textContent = `${p2Score} | Shots: ${availableShots}`;
     }
 
     function endGame(winner) {
-         if (gameOver) return; gameOver = true; gamePaused = true; isMarking = false;
-         if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
-         let winnerText = winner ? `${winner} Wins!` : (p1Score > p2Score ? "Player 1 Wins!" : (p2Score > p1Score ? "Player 2 Wins!" : "It's a Tie!"));
+         if (gameOver) return; // Prevent multiple calls
+         gameOver = true;
+         gamePaused = true; // Ensure game loop stops
+         gameStarted = false; // Reset for next game start
+         isMarking = false; // Stop blaster marking
+
+         // Stop the game loop
+         if (animationFrameId) {
+             cancelAnimationFrame(animationFrameId);
+             animationFrameId = null;
+         }
+
+         // Stop the music
+         pauseMusic();
+
+         // Determine winner message
+         let winnerText;
+         if (winner) {
+             winnerText = `${winner} Wins!`; // Specific winner (e.g., from topping out)
+         } else {
+             // Determine winner by score if no specific condition met
+             winnerText = p1Score > p2Score ? "Tetris Wins!" : (p2Score > p1Score ? "Blaster Wins!" : "It's a Tie!");
+         }
          winnerMessage.textContent = winnerText;
+
+         // Show game over screen
          gameOverScreen.classList.remove('hidden');
-         startPauseButton.textContent = "Start"; startPauseButton.disabled = true;
+
+         // Update button states
+         startPauseButton.textContent = "Start";
+         startPauseButton.disabled = true; // Disable start/pause until restart
+
+         // Clean up listeners
          removeEventListeners();
+         clearMarkedDotVisuals(); // Clear any remaining marks
+         laserDot.style.display = 'none'; // Hide laser dot
+         console.log("Game Over:", winnerText);
     }
 
-    // --- Controls: Pause / Resume / Restart / Speed ---
+
+    // --- Controls: Pause / Resume / Restart / Speed / Sound ---
     function togglePauseResume() {
-        if (gameOver) return; gamePaused = !gamePaused;
-        if (gamePaused) {
-            isMarking = false; if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
-            startPauseButton.textContent = "Resume"; console.log("Game Paused");
-        } else {
-            startPauseButton.textContent = "Pause"; lastTime = performance.now();
-            if (!animationFrameId) animationFrameId = requestAnimationFrame(gameLoop);
-             console.log("Game Resumed");
+        if (gameOver) return; // Don't allow pause/resume if game is over
+
+        if (!gameStarted) { // First time pressing "Start"
+            gameStarted = true;
+            gamePaused = false;
+            startPauseButton.textContent = "Pause";
+            lastTime = performance.now(); // Initialize timer
+            if (!animationFrameId) {
+                animationFrameId = requestAnimationFrame(gameLoop);
+            }
+            playMusic(); // Start music on first start
+            addEventListeners(); // Add game input listeners
+            console.log("Game Started");
+        } else { // Toggling pause/resume during gameplay
+            gamePaused = !gamePaused;
+            if (gamePaused) {
+                isMarking = false; // Stop marking when paused
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                    animationFrameId = null;
+                }
+                startPauseButton.textContent = "Resume";
+                pauseMusic(); // Pause music
+                laserDot.style.display = 'none'; // Hide laser dot when paused
+                removeEventListeners(); // Remove game input listeners while paused
+                console.log("Game Paused");
+            } else {
+                startPauseButton.textContent = "Pause";
+                lastTime = performance.now(); // Reset timer for accurate delta
+                if (!animationFrameId) {
+                    animationFrameId = requestAnimationFrame(gameLoop);
+                }
+                playMusic(); // Resume music
+                addEventListeners(); // Re-add game input listeners
+                console.log("Game Resumed");
+            }
         }
     }
 
+
     function restartGame() {
          console.log("Restarting game...");
-         if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
-         isMarking = false; removeEventListeners(); initializeGame(); gamePaused = true; gameOver = false;
-         startPauseButton.textContent = "Start"; startPauseButton.disabled = false;
-         gameOverScreen.classList.add('hidden');
+         // Stop current game loop and music
+         if (animationFrameId) {
+             cancelAnimationFrame(animationFrameId);
+             animationFrameId = null;
+         }
+         pauseMusic();
+         bgMusic.currentTime = 0; // Reset music to beginning
+
+         // Reset game state variables
+         isMarking = false;
+         gameOver = false;
+         gamePaused = true; // Start in paused state
+         gameStarted = false; // Requires pressing "Start" again
+
+         // Clear visuals
+         clearMarkedDotVisuals();
+         laserDot.style.display = 'none';
+
+         // Re-initialize game logic state
+         initializeGameInternals();
+
+         // Update UI
+         startPauseButton.textContent = "Start";
+         startPauseButton.disabled = false; // Enable start button
+         gameOverScreen.classList.add('hidden'); // Hide game over screen
+
+         // Initial draw
+         drawGame();
+         drawNextPiece();
+
+         // Ensure listeners are removed (should be if paused/game over, but belt-and-suspenders)
+         removeEventListeners();
+         // Listeners will be added back when "Start" is pressed via togglePauseResume
+
+         console.log("Game Ready. Press Start.");
     }
 
     function handleSpeedChange(event) {
          const newInterval = parseInt(event.target.value, 10);
          dropInterval = newInterval; // Update the game's interval
          speedValueDisplay.textContent = `${newInterval}ms`; // Update the display
-         // console.log(`Speed set to: ${dropInterval}ms`);
+    }
+
+    // --- Sound Control Functions ---
+    function playMusic() {
+        if (!isMuted && bgMusic.paused) {
+            bgMusic.play().catch(e => console.error("Audio play failed:", e)); // Play and catch errors
+        }
+    }
+
+    function pauseMusic() {
+        bgMusic.pause();
+    }
+
+    function handleVolumeChange(event) {
+        const volume = parseFloat(event.target.value);
+        bgMusic.volume = volume;
+        // If changing volume while muted, unmute
+        if (volume > 0 && isMuted) {
+            toggleMute(); // This will update the button text as well
+        } else if (volume === 0 && !isMuted) {
+             toggleMute(); // Mute if slider dragged to 0
+        }
+        lastVolume = volume; // Store the last non-zero volume if unmuting later
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        bgMusic.muted = isMuted;
+        muteButton.textContent = isMuted ? "Unmute" : "Mute";
+        muteButton.classList.toggle('muted', isMuted);
+        if (isMuted) {
+            volumeSlider.value = 0; // Visually set slider to 0 when muted
+        } else {
+            // Restore volume slider to last known value (or default if it was 0)
+            volumeSlider.value = lastVolume > 0 ? lastVolume : 0.5;
+            bgMusic.volume = parseFloat(volumeSlider.value); // Ensure audio element volume matches
+            // If game is running, start playing music again
+            if (!gamePaused && gameStarted) {
+                playMusic();
+            }
+        }
     }
 
 
     // --- Event Listener Management ---
     function addEventListeners() {
-         document.addEventListener('keydown', handlePlayer1Input);
-         blasterContainer.addEventListener('mousemove', handleBlasterMouseMove);
-         blasterContainer.addEventListener('mouseleave', handleMouseLeaveBlaster);
-         blasterContainer.addEventListener('mousedown', handleBlasterMouseDown);
-         blasterContainer.addEventListener('contextmenu', handleBlasterRightClick);
+         // Keyboard for Tetris piece control
+         document.addEventListener('keydown', handleInput);
+         // Mouse for Blaster control (attach to the container)
+         gameBoardContainer.addEventListener('mousemove', handleBlasterMouseMove);
+         gameBoardContainer.addEventListener('mouseleave', handleMouseLeaveBlaster);
+         gameBoardContainer.addEventListener('mousedown', handleBlasterMouseDown);
+         gameBoardContainer.addEventListener('contextmenu', handleBlasterRightClick);
+         // Window listener for mouse up to catch drags outside the container
          window.addEventListener('mouseup', handleWindowMouseUp);
-         speedSlider.addEventListener('input', handleSpeedChange); // Listener for speed slider
     }
 
     function removeEventListeners() {
-         document.removeEventListener('keydown', handlePlayer1Input);
-         blasterContainer.removeEventListener('mousemove', handleBlasterMouseMove);
-         blasterContainer.removeEventListener('mouseleave', handleMouseLeaveBlaster);
-         blasterContainer.removeEventListener('mousedown', handleBlasterMouseDown);
-         blasterContainer.removeEventListener('contextmenu', handleBlasterRightClick);
+         document.removeEventListener('keydown', handleInput);
+         gameBoardContainer.removeEventListener('mousemove', handleBlasterMouseMove);
+         gameBoardContainer.removeEventListener('mouseleave', handleMouseLeaveBlaster);
+         gameBoardContainer.removeEventListener('mousedown', handleBlasterMouseDown);
+         gameBoardContainer.removeEventListener('contextmenu', handleBlasterRightClick);
          window.removeEventListener('mouseup', handleWindowMouseUp);
-         speedSlider.removeEventListener('input', handleSpeedChange);
     }
 
 
     // --- Game Initialization ---
-    function initializeGame() {
-        p1Board = createEmptyBoard(); p2BoardRepresentation = createEmptyBoard();
-        p1Score = 0; p2Score = 0; availableShots = INITIAL_SHOTS; totalLinesCleared = 0;
-        dropCounter = 0; dropInterval = parseInt(speedSlider.value, 10); // Init speed from slider
-        gameOver = false; gamePaused = true; currentPiece = null;
-        nextPiece = getRandomPiece(); lastTime = 0; isMarking = false;
 
-        clearMarkedDotVisuals(); updateScores();
+    // Separated internal state reset from full initialization
+    function initializeGameInternals() {
+        board = createEmptyBoard();
+        p1Score = 0;
+        p2Score = 0;
+        availableShots = INITIAL_SHOTS;
+        totalLinesCleared = 0;
+        dropCounter = 0;
+        dropInterval = parseInt(speedSlider.value, 10); // Init speed from slider
+        currentPiece = null; // Will be set by spawnNewPiece
+        nextPiece = getRandomPiece(); // Pre-generate the first "next" piece
+        lastTime = 0;
+        isMarking = false;
 
-        // Update speed slider display initially
-        speedValueDisplay.textContent = `${dropInterval}ms`;
-
-        drawTetris(); drawBlasterView(); spawnNewPiece(); // Includes drawNextPiece()
-        addEventListeners();
-        console.log("Game Initialized. Press Start.");
+        updateScores();
+        spawnNewPiece(); // Spawn the very first piece
     }
 
-    // --- Attach Control Button Listeners ---
-    startPauseButton.addEventListener('click', togglePauseResume);
-    restartButton.addEventListener('click', restartGame);
-    restartButtonGameOver.addEventListener('click', restartGame);
+    function initializeGame() {
+        console.log("Initializing Game...");
+        initializeGameInternals(); // Set up board, scores, pieces etc.
+
+        // Initial state setup
+        gameOver = false;
+        gamePaused = true; // Start paused
+        gameStarted = false; // Hasn't actually started playing yet
+
+        // Update UI elements
+        speedValueDisplay.textContent = `${dropInterval}ms`;
+        gameOverScreen.classList.add('hidden');
+        startPauseButton.textContent = "Start";
+        startPauseButton.disabled = false;
+
+        // Initial Draw
+        drawGame(); // Draw the empty board and the first piece
+        drawNextPiece(); // Draw the first next piece
+
+        // Set up non-gameplay event listeners (controls)
+        startPauseButton.addEventListener('click', togglePauseResume);
+        restartButton.addEventListener('click', restartGame);
+        restartButtonGameOver.addEventListener('click', restartGame);
+        speedSlider.addEventListener('input', handleSpeedChange);
+        volumeSlider.addEventListener('input', handleVolumeChange);
+        muteButton.addEventListener('click', toggleMute);
+
+        // Initialize Sound State
+        lastVolume = parseFloat(volumeSlider.value);
+        bgMusic.volume = lastVolume;
+        isMuted = false; // Start unmuted
+        bgMusic.muted = false;
+        muteButton.textContent = "Mute";
+        muteButton.classList.remove('muted');
+
+        // Ensure game input listeners are initially off
+        removeEventListeners();
+
+        console.log("Game Initialized. Press Start.");
+    }
 
     // --- Initial Game Setup ---
     initializeGame(); // Setup the game state, initially paused
